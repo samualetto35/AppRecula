@@ -224,7 +224,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
             </div>
 
             {/* Main Content wrapper */}
-            <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 border-b border-l border-r border-gray-200" style={{ backgroundColor: '#ffffff' }}>
+            <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 border-b border-r border-gray-200" style={{ backgroundColor: '#ffffff' }}>
             <main>
           <div className="mb-8">
             <h2 className="text-lg font-medium text-black mb-2">
