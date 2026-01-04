@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create enum types
 CREATE TYPE company_status AS ENUM ('active', 'suspended');
 CREATE TYPE membership_role AS ENUM ('admin', 'recruiter', 'viewer');
-CREATE TYPE membership_status AS ENUM ('active', 'revoked');
+CREATE TYPE membership_status AS ENUM ('active', 'revoked', 'pending');
 
 -- Profiles table (extends auth.users)
 CREATE TABLE profiles (
@@ -33,23 +33,32 @@ CREATE TABLE companies (
 );
 
 -- Memberships table (many-to-many relationship)
+-- user_id can be NULL for pending invitations (before user logs in)
+-- email is used to match pending invitations when user logs in
 CREATE TABLE memberships (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   role membership_role NOT NULL,
   status membership_status NOT NULL DEFAULT 'active',
+  email TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, company_id)
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create indexes for better query performance
 CREATE INDEX idx_memberships_user_id ON memberships(user_id);
 CREATE INDEX idx_memberships_company_id ON memberships(company_id);
 CREATE INDEX idx_memberships_status ON memberships(status);
+CREATE INDEX idx_memberships_email ON memberships(email);
 CREATE INDEX idx_companies_status ON companies(status);
 CREATE INDEX idx_companies_created_by ON companies(created_by_user_id);
+
+-- Unique constraint: one active membership per user+company
+-- But allows multiple pending memberships with same email
+CREATE UNIQUE INDEX memberships_user_company_active_unique 
+ON memberships(user_id, company_id) 
+WHERE user_id IS NOT NULL AND status = 'active';
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

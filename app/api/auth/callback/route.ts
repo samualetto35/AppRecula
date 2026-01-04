@@ -162,19 +162,118 @@ export async function GET(request: Request) {
 
   // Handle login flow
   console.log('🔐 LOGIN FLOW')
-  const { data: memberships } = await supabase
+  
+  // First, check for pending memberships by email and activate them
+  const { data: pendingMemberships, error: pendingError } = await supabase
     .from('memberships')
-    .select('id, company_id')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .limit(10)
+    .select('id, company_id, email, role, full_name')
+    .eq('email', user.email!)
+    .eq('status', 'pending')
 
-  if (!memberships || memberships.length === 0) {
-    console.log('❌ No memberships found, redirecting to registration')
-    return NextResponse.redirect(new URL('/register?error=no_memberships', request.url))
+  if (pendingError) {
+    console.error('❌ Error checking pending memberships:', pendingError)
+  } else {
+    console.log(`🔍 Found ${pendingMemberships?.length || 0} pending memberships`)
   }
 
-  console.log('✅ User has memberships, redirecting to dashboard')
-  return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (pendingMemberships && pendingMemberships.length > 0) {
+    console.log(`🔄 Found ${pendingMemberships.length} pending membership(s), activating...`)
+    
+    // Activate each pending membership
+    for (const pending of pendingMemberships) {
+      console.log(`🔄 Activating membership ${pending.id} for user ${user.id}`)
+      
+      const { data: updatedMembership, error: activateError } = await supabase
+        .from('memberships')
+        .update({
+          user_id: user.id,
+          status: 'active',
+        })
+        .eq('id', pending.id)
+        .eq('status', 'pending')
+        .select()
+        .single()
+
+      if (activateError) {
+        console.error(`❌ Error activating membership ${pending.id}:`, activateError)
+        console.error('Error details:', JSON.stringify(activateError, null, 2))
+      } else {
+        console.log(`✅ Activated membership ${pending.id} for company ${pending.company_id}`)
+        console.log('Updated membership:', {
+          id: updatedMembership?.id,
+          user_id: updatedMembership?.user_id,
+          status: updatedMembership?.status
+        })
+      }
+    }
+
+    // Create profile if it doesn't exist
+    // Use full_name from the first pending membership if available
+    const firstPending = pendingMemberships[0]
+    const fullNameFromInvite = firstPending?.full_name || user.user_metadata?.full_name || ''
+    
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!existingProfile) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email!,
+          full_name: fullNameFromInvite,
+          job_title: '',
+        })
+
+      if (profileError) {
+        console.error('❌ Error creating profile:', profileError)
+      } else {
+        console.log('✅ Profile created with name:', fullNameFromInvite)
+      }
+    }
+  }
+
+  // Now check for active memberships
+  console.log(`🔍 Checking for active memberships for user ${user.id}`)
+  const { data: memberships, error: membershipsError } = await supabase
+    .from('memberships')
+    .select(`
+      id,
+      company_id,
+      company:companies(id, status, name)
+    `)
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+
+  if (membershipsError) {
+    console.error('❌ Error fetching active memberships:', membershipsError)
+    return NextResponse.redirect(new URL('/setup', request.url))
+  }
+
+  if (!memberships || memberships.length === 0) {
+    console.log('❌ No active memberships found for user:', user.id)
+    return NextResponse.redirect(new URL('/setup', request.url))
+  }
+
+  console.log(`✅ Found ${memberships.length} active membership(s)`)
+
+  // Filter only active companies
+  const activeMemberships = memberships.filter((m: any) => m.company?.status === 'active')
+
+  if (activeMemberships.length === 0) {
+    console.log('❌ No active company memberships')
+    return NextResponse.redirect(new URL('/access-denied?reason=company_suspended', request.url))
+  }
+
+  console.log(`✅ User has ${activeMemberships.length} active membership(s)`)
+  
+  if (activeMemberships.length === 1) {
+    return NextResponse.redirect(new URL(`/dashboard?companyId=${activeMemberships[0].company_id}`, request.url))
+  }
+
+  return NextResponse.redirect(new URL('/select-company', request.url))
 }
 

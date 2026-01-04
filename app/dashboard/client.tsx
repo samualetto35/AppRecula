@@ -8,9 +8,10 @@ import OnboardingModal from './onboarding-modal'
 interface Props {
   company: Company
   userRole: MembershipRole
+  companyId: string
 }
 
-export default function DashboardClient({ company, userRole }: Props) {
+export default function DashboardClient({ company, userRole, companyId }: Props) {
   const router = useRouter()
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [companyData, setCompanyData] = useState(company)
@@ -22,8 +23,17 @@ export default function DashboardClient({ company, userRole }: Props) {
   }, [companyData.onboarding_completed])
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      // Clear any client-side state if needed
+      router.push('/login')
+      // Force a hard refresh to clear any cached state
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still redirect even if API call fails
+      router.push('/login')
+    }
   }
 
   const handleOnboardingComplete = (updatedCompany: Company) => {
@@ -59,6 +69,29 @@ export default function DashboardClient({ company, userRole }: Props) {
             <p className="text-sm text-gray-600">
               You are logged in as <span className="font-medium capitalize">{userRole}</span>
             </p>
+            
+            {/* Role-based access indicators */}
+            {userRole === 'admin' && (
+              <div className="mt-4 rounded border border-blue-200 bg-blue-50 p-3">
+                <p className="text-sm text-blue-800">
+                  <strong>Admin Access:</strong> You have full access to company settings and user management.
+                </p>
+              </div>
+            )}
+            {userRole === 'recruiter' && (
+              <div className="mt-4 rounded border border-green-200 bg-green-50 p-3">
+                <p className="text-sm text-green-800">
+                  <strong>Recruiter Access:</strong> You can manage recruitment activities.
+                </p>
+              </div>
+            )}
+            {userRole === 'viewer' && (
+              <div className="mt-4 rounded border border-gray-200 bg-gray-50 p-3">
+                <p className="text-sm text-gray-800">
+                  <strong>Viewer Access:</strong> You have read-only access to company information.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="border border-gray-200 rounded p-6">
@@ -99,6 +132,24 @@ export default function DashboardClient({ company, userRole }: Props) {
             <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
               <p className="text-sm text-yellow-800">
                 Complete your company onboarding to access all features.
+              </p>
+            </div>
+          )}
+
+          {/* Admin-only: Team Management Section */}
+          {userRole === 'admin' && (
+            <div className="mt-8 border border-gray-200 rounded p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-base font-medium text-black">Team Management</h3>
+                <button
+                  onClick={() => router.push(`/dashboard/team?companyId=${companyId}`)}
+                  className="px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800"
+                >
+                  Manage Team
+                </button>
+              </div>
+              <p className="text-sm text-gray-600">
+                Invite team members and manage their access to your company.
               </p>
             </div>
           )}

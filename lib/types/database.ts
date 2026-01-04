@@ -28,10 +28,12 @@ export interface Company {
 
 export interface Membership {
   id: string
-  user_id: string
+  user_id: string | null
   company_id: string
   role: MembershipRole
   status: MembershipStatus
+  email: string | null
+  full_name: string | null
   created_at: string
   updated_at: string
 }

@@ -7,24 +7,23 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ companyId?: string }>
 }) {
-  console.log('📊 Dashboard page loading...')
   const user = await requireAuth()
-  console.log('📊 Dashboard - User authenticated:', user.id)
   const memberships = await getActiveMemberships(user.id)
-  console.log('📊 Dashboard - Memberships found:', memberships.length)
 
+  // Case A: No memberships
   if (memberships.length === 0) {
-    redirect('/register?error=no_memberships')
+    redirect('/setup')
   }
 
   const params = await searchParams
   let companyId = params.companyId
 
-  // If no company selected, use the first one or redirect to selection
+  // Case B: Single membership - use it directly
   if (!companyId) {
     if (memberships.length === 1) {
       companyId = memberships[0].company_id
     } else {
+      // Case C: Multiple memberships - redirect to selection
       redirect('/select-company')
     }
   }
@@ -35,11 +34,16 @@ export default async function DashboardPage({
     redirect('/select-company')
   }
 
-  const company = await getCompany(companyId!)
-  if (!company) {
-    redirect('/select-company')
+  // Check company status
+  if (membership.company.status !== 'active') {
+    redirect('/access-denied?reason=company_suspended')
   }
 
-  return <DashboardClient company={company} userRole={membership.role} />
+  const company = await getCompany(companyId!)
+  if (!company || company.status !== 'active') {
+    redirect('/access-denied?reason=company_suspended')
+  }
+
+  return <DashboardClient company={company} userRole={membership.role} companyId={companyId!} />
 }
 
