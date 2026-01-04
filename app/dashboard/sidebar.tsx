@@ -93,7 +93,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
                       onClick={() => handleNavigate(item.path)}
                       className={`
                         w-full flex items-center gap-3 px-4 py-3 text-sm rounded-md
-                        transition-colors
+                        transition-colors cursor-pointer
                         ${
                           isActive
                             ? 'text-black font-medium'

@@ -43,6 +43,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
   })
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteError, setInviteError] = useState('')
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true) // Default open on desktop
 
   useEffect(() => {
@@ -135,6 +136,11 @@ export default function DashboardClient({ company, userRole, companyId, userFull
     }
   }
 
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false)
+    handleLogout()
+  }
+
   const handleOnboardingComplete = (updatedCompany: Company) => {
     setCompanyData(updatedCompany)
     setShowOnboarding(false)
@@ -154,7 +160,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
               {/* Mobile menu button */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-1.5 text-gray-600 hover:text-black hover:bg-gray-50 rounded"
+                className="lg:hidden p-1.5 text-gray-600 hover:text-black hover:bg-gray-50 rounded cursor-pointer"
                 aria-label="Toggle menu"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -164,7 +170,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
               {/* Desktop sidebar toggle */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="hidden lg:block p-1.5 text-gray-600 hover:text-black hover:bg-gray-50 rounded"
+                className="hidden lg:block p-1.5 text-gray-600 hover:text-black hover:bg-gray-50 rounded cursor-pointer"
                 aria-label="Toggle sidebar"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -177,8 +183,8 @@ export default function DashboardClient({ company, userRole, companyId, userFull
               </div>
             </div>
             <button
-              onClick={handleLogout}
-              className="px-3 py-1.5 text-xs text-black border border-gray-300 rounded hover:bg-gray-50"
+              onClick={() => setShowLogoutModal(true)}
+              className="px-3 py-1.5 text-xs text-black border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
             >
               Sign out
             </button>
@@ -259,7 +265,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
                 <h3 className="text-base font-medium text-black">Team Members</h3>
                 <button
                   onClick={() => setShowInviteModal(true)}
-                  className="px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800"
+                  className="px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800 cursor-pointer"
                 >
                   Invite User
                 </button>
@@ -397,6 +403,32 @@ export default function DashboardClient({ company, userRole, companyId, userFull
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style={{ boxShadow: 'inset 0 0 0 1000px rgba(0, 0, 0, 0.3)' }}>
+          <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6 border border-gray-200 shadow-2xl">
+            <h2 className="text-xl font-medium text-black mb-4">Sign Out</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Çıkmak istediğinizden emin misiniz?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 px-4 py-2 text-sm text-black border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogoutConfirm}
+                className="flex-1 px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800 cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showOnboarding && (
         <OnboardingModal
