@@ -216,7 +216,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
             </p>
           </div>
 
-          <div className="border border-gray-200 rounded p-6">
+          <div className="rounded">
             <h3 className="text-base font-medium text-black mb-4">Company Information</h3>
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -260,7 +260,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
 
           {/* Admin-only: Team Management Section */}
           {userRole === 'admin' && (
-            <div className="mt-8 border border-gray-200 rounded p-6">
+            <div className="mt-8 rounded">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-base font-medium text-black">Team Members</h3>
                 <button
