@@ -82,8 +82,59 @@ export async function GET(request: Request) {
         console.log('✅ User already registered, redirecting to dashboard')
         return NextResponse.redirect(new URL('/dashboard', request.url))
       } else {
-        console.error('❌ Profile exists but no memberships')
-        return NextResponse.redirect(new URL('/register?error=profile_exists_no_membership', request.url))
+        // Profile exists but no memberships - this can happen if:
+        // 1. User logged in before but didn't complete registration
+        // 2. User is trying to register again
+        // If we have registration parameters, create company and membership
+        console.log('⚠️  Profile exists but no memberships - attempting to create company/membership from registration params')
+        
+        // Check if we have registration parameters (coming from register flow)
+        if (email && fullName && jobTitle && companyName) {
+          console.log('📝 Registration parameters found, creating company and membership...')
+          
+          // Create company
+          const { data: company, error: companyError } = await supabase
+            .from('companies')
+            .insert({
+              name: companyName,
+              website: companyWebsite || null,
+              status: 'active',
+              onboarding_completed: false,
+              created_by_user_id: user.id,
+              created_user_job_title: jobTitle,
+            })
+            .select()
+            .single()
+
+          if (companyError || !company) {
+            console.error('❌ Company creation error:', companyError)
+            // If company creation fails, redirect to setup (safer than register)
+            return NextResponse.redirect(new URL('/setup', request.url))
+          }
+          console.log('✅ Company created successfully:', company.id)
+
+          // Create membership
+          const { error: membershipError } = await supabase.from('memberships').insert({
+            user_id: user.id,
+            company_id: company.id,
+            role: 'admin',
+            status: 'active',
+          })
+
+          if (membershipError) {
+            console.error('❌ Membership creation error:', membershipError)
+            // If membership creation fails, redirect to setup
+            return NextResponse.redirect(new URL('/setup', request.url))
+          }
+          console.log('✅ Membership created successfully')
+          console.log('✅✅✅ REGISTRATION COMPLETE (Profile existed) ✅✅✅')
+          return NextResponse.redirect(new URL('/dashboard', request.url))
+        } else {
+          // No registration parameters - user probably came from login flow
+          // Redirect to setup page where they can choose to register
+          console.log('⚠️  No registration parameters - redirecting to setup')
+          return NextResponse.redirect(new URL('/setup', request.url))
+        }
       }
     }
 
