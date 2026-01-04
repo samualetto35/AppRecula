@@ -148,37 +148,37 @@ export default function DashboardClient({ company, userRole, companyId, userFull
     <>
       <div className="min-h-screen bg-white">
         {/* Header - Full width, not affected by sidebar */}
-        <header className="border-b border-gray-200">
-          <div className="px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <div className="flex items-center gap-4">
+        <header style={{ backgroundColor: '#f9f9f9' }}>
+          <div className="px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
+            <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 text-gray-600 hover:text-black hover:bg-gray-50 rounded"
+                className="lg:hidden p-1.5 text-gray-600 hover:text-black hover:bg-gray-50 rounded"
                 aria-label="Toggle menu"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path fillRule="evenodd" clipRule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H13V18H6C5.44772 18 5 17.5523 5 17V7ZM15 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H15V18Z" fill="currentColor"/>
                 </svg>
               </button>
               {/* Desktop sidebar toggle */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="hidden lg:block p-2 text-gray-600 hover:text-black hover:bg-gray-50 rounded"
+                className="hidden lg:block p-1.5 text-gray-600 hover:text-black hover:bg-gray-50 rounded"
                 aria-label="Toggle sidebar"
               >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path fillRule="evenodd" clipRule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H13V18H6C5.44772 18 5 17.5523 5 17V7ZM15 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H15V18Z" fill="currentColor"/>
                 </svg>
               </button>
               <div>
-                <h1 className="text-xl font-medium text-black">Dashboard</h1>
-                <p className="text-sm text-gray-600">{companyData.name}</p>
+                <h1 className="text-lg font-medium text-black">Dashboard</h1>
+                <p className="text-xs text-gray-600">{companyData.name}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm text-black border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1.5 text-xs text-black border border-gray-300 rounded hover:bg-gray-50"
             >
               Sign out
             </button>
@@ -186,17 +186,21 @@ export default function DashboardClient({ company, userRole, companyId, userFull
         </header>
 
         {/* Content area - Split between sidebar and main content */}
-        <div className="flex">
-          {/* Sidebar */}
-          <Sidebar
-            companyId={companyId}
-            userRole={userRole}
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-          />
+        <div className="flex px-1 sm:px-2 lg:px-3 pb-1 sm:pb-2 lg:pb-3" style={{ backgroundColor: '#f9f9f9' }}>
+          <div className="flex w-full p-2 sm:p-2.5 lg:p-3 rounded-xl" style={{ backgroundColor: '#f9f9f9' }}>
+            {/* Sidebar wrapper */}
+            <div style={{ backgroundColor: '#f5f5f5' }}>
+              <Sidebar
+                companyId={companyId}
+                userRole={userRole}
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+              />
+            </div>
 
-          {/* Main Content */}
-          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+            {/* Main Content wrapper */}
+            <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 rounded-xl border border-gray-200" style={{ backgroundColor: '#ffffff' }}>
+            <main>
           <div className="mb-8">
             <h2 className="text-lg font-medium text-black mb-2">
               Welcome{userFullName ? `, ${userFullName}` : ''}
@@ -388,7 +392,9 @@ export default function DashboardClient({ company, userRole, companyId, userFull
               </div>
             </div>
           )}
-          </main>
+            </main>
+            </div>
+          </div>
         </div>
       </div>
 

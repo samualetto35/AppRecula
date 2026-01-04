@@ -60,12 +60,12 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full bg-white z-50 shadow-lg lg:shadow-none
+          fixed top-0 left-0 h-full z-50 shadow-lg lg:shadow-none
           transform transition-all duration-300 ease-in-out
           lg:relative lg:z-auto
-          border-l border-gray-200
-          ${isOpen ? 'translate-x-0 w-80 lg:w-56' : '-translate-x-full lg:translate-x-0 lg:w-0 lg:border-0'}
+          ${isOpen ? 'translate-x-0 w-80 lg:w-56' : '-translate-x-full lg:translate-x-0 lg:w-0'}
           overflow-hidden
+          bg-white lg:bg-transparent
         `}
       >
         <div className={`flex flex-col h-full ${!isOpen ? 'lg:opacity-0 lg:pointer-events-none' : ''}`}>
@@ -83,7 +83,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4">
+          <nav className="flex-1 p-4" style={{ backgroundColor: '#f9f9f9' }}>
             <ul className="space-y-2">
               {menuItems.map((item) => {
                 const isActive = pathname === item.path.split('?')[0]
@@ -92,14 +92,27 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
                     <button
                       onClick={() => handleNavigate(item.path)}
                       className={`
-                        w-full flex items-center gap-3 px-4 py-3 text-sm rounded
+                        w-full flex items-center gap-3 px-4 py-3 text-sm rounded-md
                         transition-colors
                         ${
                           isActive
-                            ? 'bg-gray-100 text-black font-medium'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                            ? 'text-black font-medium'
+                            : 'text-gray-600 hover:text-black'
                         }
                       `}
+                      style={{
+                        backgroundColor: isActive ? '#e4e2e3' : 'transparent',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = '#e4e2e3'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }
+                      }}
                     >
                       {item.icon}
                       <span>{item.label}</span>
