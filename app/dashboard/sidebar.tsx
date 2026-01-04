@@ -63,7 +63,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
       <aside
         className={`
           fixed top-0 left-0 z-50
-          transform transition-all duration-300 ease-in-out
+          transform transition-all duration-150 ease-in-out
           lg:border-r lg:border-gray-200
           ${isOpen 
             ? 'translate-x-0 w-80 lg:w-56 lg:relative h-full' 
@@ -134,7 +134,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
                       <span className="flex-shrink-0 w-6 h-6 lg:w-5 lg:h-5">
                         {item.icon}
                       </span>
-                      <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${!isOpen && !isHovered ? 'lg:w-0 lg:opacity-0 lg:overflow-hidden' : 'lg:opacity-100 lg:ml-3'}`}>{item.label}</span>
+                      <span className={`transition-all duration-150 ease-in-out whitespace-nowrap ${!isOpen && !isHovered ? 'lg:w-0 lg:opacity-0 lg:overflow-hidden' : 'lg:opacity-100 lg:ml-3'}`}>{item.label}</span>
                     </button>
                   </li>
                 )
