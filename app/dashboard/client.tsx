@@ -44,7 +44,25 @@ export default function DashboardClient({ company, userRole, companyId, userFull
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteError, setInviteError] = useState('')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true) // Default open on desktop
+  // Initialize with default value to avoid hydration mismatch
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  // Load sidebar preference from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarOpen')
+      if (saved !== null) {
+        setSidebarOpen(saved === 'true')
+      }
+    }
+  }, [])
+
+  // Save sidebar preference to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarOpen', String(sidebarOpen))
+    }
+  }, [sidebarOpen])
 
   useEffect(() => {
     if (!companyData.onboarding_completed) {
@@ -185,7 +203,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
             </div>
             <button
               onClick={() => setShowLogoutModal(true)}
-              className="px-3 py-1.5 text-xs text-black border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+              className="px-3 py-1.5 text-xs text-black border border-gray-300 rounded-full hover:bg-gray-50 cursor-pointer"
             >
               Sign out
             </button>
