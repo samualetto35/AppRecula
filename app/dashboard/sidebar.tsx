@@ -99,7 +99,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
 
           {/* Navigation */}
           <nav className={`flex-1 bg-white lg:bg-[#f9f9f9] ${!isOpen && !isHovered ? 'lg:p-2' : 'p-4 lg:p-2'}`}>
-            <ul className="space-y-2">
+            <ul className="space-y-2 lg:space-y-1">
               {menuItems.map((item) => {
                 const isActive = pathname === item.path.split('?')[0]
                 return (
@@ -107,9 +107,10 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
                     <button
                       onClick={() => handleNavigate(item.path)}
                       className={`
-                        w-full flex items-center text-sm rounded-md
+                        w-full flex items-center rounded-md
                         cursor-pointer
-                        lg:justify-start lg:px-2 lg:py-2.5
+                        px-4 py-3 gap-3 text-base
+                        lg:justify-start lg:px-2 lg:py-2.5 lg:text-sm lg:gap-0
                         ${
                           isActive
                             ? 'text-black font-medium'
@@ -130,7 +131,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
                         }
                       }}
                     >
-                      <span className="flex-shrink-0 w-5 h-5">
+                      <span className="flex-shrink-0 w-6 h-6 lg:w-5 lg:h-5">
                         {item.icon}
                       </span>
                       <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${!isOpen && !isHovered ? 'lg:w-0 lg:opacity-0 lg:overflow-hidden' : 'lg:opacity-100 lg:ml-3'}`}>{item.label}</span>
