@@ -30,6 +30,8 @@ export async function GET(request: Request) {
 
     // Get all memberships for this company
     // Use left join to include pending memberships (no profile yet)
+    console.log(`🔍 Fetching memberships for company ${companyId} by user ${user.id} (role: ${userMembership.role})`)
+    
     const { data: allMemberships, error } = await supabase
       .from('memberships')
       .select(`
@@ -46,11 +48,14 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (error) {
+      console.error('❌ Error fetching memberships:', error)
       return NextResponse.json(
         { error: error.message },
         { status: 400 }
       )
     }
+
+    console.log(`✅ Found ${allMemberships?.length || 0} memberships (before filtering)`)
 
     // Filter based on role
     let filteredMemberships = allMemberships || []
