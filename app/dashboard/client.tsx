@@ -312,8 +312,8 @@ export default function DashboardClient({ company, userRole, companyId, userFull
 
           {/* Invite Modal */}
           {showInviteModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style={{ boxShadow: 'inset 0 0 0 1000px rgba(0, 0, 0, 0.3)' }}>
+              <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6 border border-gray-200 shadow-2xl">
                 <h2 className="text-xl font-medium text-black mb-4">Invite User</h2>
                 <form onSubmit={handleInvite} className="space-y-4">
                   <div>

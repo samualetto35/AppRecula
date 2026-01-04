@@ -83,7 +83,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4" style={{ backgroundColor: '#f9f9f9' }}>
+          <nav className="flex-1 p-4 bg-white lg:bg-[#f9f9f9]">
             <ul className="space-y-2">
               {menuItems.map((item) => {
                 const isActive = pathname === item.path.split('?')[0]
@@ -101,11 +101,11 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
                         }
                       `}
                       style={{
-                        backgroundColor: isActive ? '#e4e2e3' : 'transparent',
+                        backgroundColor: isActive ? '#e4e3e3' : 'transparent',
                       }}
                       onMouseEnter={(e) => {
                         if (!isActive) {
-                          e.currentTarget.style.backgroundColor = '#e4e2e3'
+                          e.currentTarget.style.backgroundColor = '#e4e3e3'
                         }
                       }}
                       onMouseLeave={(e) => {
