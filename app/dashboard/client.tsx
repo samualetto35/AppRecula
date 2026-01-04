@@ -4,23 +4,122 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Company, MembershipRole } from '@/lib/types/database'
 import OnboardingModal from './onboarding-modal'
+import Sidebar from './sidebar'
 
 interface Props {
   company: Company
   userRole: MembershipRole
   companyId: string
+  userFullName: string | null
 }
 
-export default function DashboardClient({ company, userRole, companyId }: Props) {
+interface TeamMember {
+  id: string
+  user_id: string | null
+  email: string | null
+  full_name: string | null
+  role: string
+  status: string
+  created_at: string
+  profile: {
+    id: string
+    full_name: string
+    email: string
+    job_title: string
+  } | null
+}
+
+export default function DashboardClient({ company, userRole, companyId, userFullName }: Props) {
   const router = useRouter()
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [companyData, setCompanyData] = useState(company)
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [teamMembersLoading, setTeamMembersLoading] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteForm, setInviteForm] = useState({
+    email: '',
+    fullName: '',
+    role: 'recruiter' as 'admin' | 'recruiter' | 'viewer',
+  })
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteError, setInviteError] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(true) // Default open on desktop
 
   useEffect(() => {
     if (!companyData.onboarding_completed) {
       setShowOnboarding(true)
     }
   }, [companyData.onboarding_completed])
+
+  // Load team members if admin
+  useEffect(() => {
+    if (userRole === 'admin') {
+      loadTeamMembers()
+    }
+  }, [userRole, companyId])
+
+  const loadTeamMembers = async () => {
+    setTeamMembersLoading(true)
+    try {
+      const response = await fetch(`/api/memberships/list?companyId=${companyId}`)
+      const data = await response.json()
+      if (response.ok) {
+        setTeamMembers(data.memberships || [])
+      }
+    } catch (err) {
+      console.error('Error loading team members:', err)
+    } finally {
+      setTeamMembersLoading(false)
+    }
+  }
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setInviteLoading(true)
+    setInviteError('')
+
+    try {
+      const response = await fetch('/api/memberships/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: inviteForm.email,
+          fullName: inviteForm.fullName,
+          role: inviteForm.role,
+          companyId: companyId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setInviteError(data.error || 'Failed to invite user')
+        setInviteLoading(false)
+        return
+      }
+
+      // Reset form and reload
+      setInviteForm({ email: '', fullName: '', role: 'recruiter' })
+      setShowInviteModal(false)
+      await loadTeamMembers()
+    } catch (err) {
+      setInviteError('An error occurred. Please try again.')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    if (status === 'active') {
+      return <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">Active</span>
+    }
+    if (status === 'pending') {
+      return <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Pending</span>
+    }
+    return <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded">Revoked</span>
+  }
 
   const handleLogout = async () => {
     try {
@@ -48,11 +147,34 @@ export default function DashboardClient({ company, userRole, companyId }: Props)
   return (
     <>
       <div className="min-h-screen bg-white">
+        {/* Header - Full width, not affected by sidebar */}
         <header className="border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-medium text-black">Dashboard</h1>
-              <p className="text-sm text-gray-600">{companyData.name}</p>
+          <div className="px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden p-2 text-gray-600 hover:text-black hover:bg-gray-50 rounded"
+                aria-label="Toggle menu"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H13V18H6C5.44772 18 5 17.5523 5 17V7ZM15 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H15V18Z" fill="currentColor"/>
+                </svg>
+              </button>
+              {/* Desktop sidebar toggle */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="hidden lg:block p-2 text-gray-600 hover:text-black hover:bg-gray-50 rounded"
+                aria-label="Toggle sidebar"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H13V18H6C5.44772 18 5 17.5523 5 17V7ZM15 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H15V18Z" fill="currentColor"/>
+                </svg>
+              </button>
+              <div>
+                <h1 className="text-xl font-medium text-black">Dashboard</h1>
+                <p className="text-sm text-gray-600">{companyData.name}</p>
+              </div>
             </div>
             <button
               onClick={handleLogout}
@@ -63,35 +185,25 @@ export default function DashboardClient({ company, userRole, companyId }: Props)
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Content area - Split between sidebar and main content */}
+        <div className="flex">
+          {/* Sidebar */}
+          <Sidebar
+            companyId={companyId}
+            userRole={userRole}
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+          />
+
+          {/* Main Content */}
+          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h2 className="text-lg font-medium text-black mb-2">Welcome</h2>
+            <h2 className="text-lg font-medium text-black mb-2">
+              Welcome{userFullName ? `, ${userFullName}` : ''}
+            </h2>
             <p className="text-sm text-gray-600">
               You are logged in as <span className="font-medium capitalize">{userRole}</span>
             </p>
-            
-            {/* Role-based access indicators */}
-            {userRole === 'admin' && (
-              <div className="mt-4 rounded border border-blue-200 bg-blue-50 p-3">
-                <p className="text-sm text-blue-800">
-                  <strong>Admin Access:</strong> You have full access to company settings and user management.
-                </p>
-              </div>
-            )}
-            {userRole === 'recruiter' && (
-              <div className="mt-4 rounded border border-green-200 bg-green-50 p-3">
-                <p className="text-sm text-green-800">
-                  <strong>Recruiter Access:</strong> You can manage recruitment activities.
-                </p>
-              </div>
-            )}
-            {userRole === 'viewer' && (
-              <div className="mt-4 rounded border border-gray-200 bg-gray-50 p-3">
-                <p className="text-sm text-gray-800">
-                  <strong>Viewer Access:</strong> You have read-only access to company information.
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="border border-gray-200 rounded p-6">
@@ -140,20 +252,144 @@ export default function DashboardClient({ company, userRole, companyId }: Props)
           {userRole === 'admin' && (
             <div className="mt-8 border border-gray-200 rounded p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-base font-medium text-black">Team Management</h3>
+                <h3 className="text-base font-medium text-black">Team Members</h3>
                 <button
-                  onClick={() => router.push(`/dashboard/team?companyId=${companyId}`)}
+                  onClick={() => setShowInviteModal(true)}
                   className="px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800"
                 >
-                  Manage Team
+                  Invite User
                 </button>
               </div>
-              <p className="text-sm text-gray-600">
-                Invite team members and manage their access to your company.
-              </p>
+              
+              {teamMembersLoading ? (
+                <p className="text-sm text-gray-600">Loading team members...</p>
+              ) : teamMembers.length === 0 ? (
+                <p className="text-sm text-gray-600">No team members yet.</p>
+              ) : (
+                <div className="mt-4 border border-gray-200 rounded overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-black border-r border-gray-200">Name</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-black border-r border-gray-200">Email</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-black border-r border-gray-200">Role</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-black border-r border-gray-200">Status</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-black">Joined</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {teamMembers.map((member) => (
+                          <tr key={member.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm text-black border-r border-gray-200">
+                              {member.profile?.full_name || member.full_name || member.email || 'N/A'}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-200">
+                              {member.profile?.email || member.email || 'N/A'}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-black capitalize border-r border-gray-200">
+                              {member.role}
+                            </td>
+                            <td className="px-4 py-3 text-sm border-r border-gray-200">
+                              {getStatusBadge(member.status)}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {new Date(member.created_at).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </main>
+
+          {/* Invite Modal */}
+          {showInviteModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+                <h2 className="text-xl font-medium text-black mb-4">Invite User</h2>
+                <form onSubmit={handleInvite} className="space-y-4">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={inviteForm.email}
+                      onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-black bg-white focus:outline-none focus:border-black"
+                      placeholder="user@company.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-medium text-black mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      id="fullName"
+                      type="text"
+                      value={inviteForm.fullName}
+                      onChange={(e) => setInviteForm({ ...inviteForm, fullName: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-black bg-white focus:outline-none focus:border-black"
+                      placeholder="John Doe"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="role" className="block text-sm font-medium text-black mb-1">
+                      Role <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="role"
+                      value={inviteForm.role}
+                      onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as any })}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-black bg-white focus:outline-none focus:border-black"
+                    >
+                      <option value="recruiter">Recruiter</option>
+                      <option value="viewer">Viewer</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+
+                  {inviteError && (
+                    <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded border border-red-200">
+                      {inviteError}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowInviteModal(false)
+                        setInviteError('')
+                        setInviteForm({ email: '', fullName: '', role: 'recruiter' })
+                      }}
+                      className="flex-1 px-4 py-2 text-sm text-black border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={inviteLoading}
+                      className="flex-1 px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {inviteLoading ? 'Sending...' : 'Send Invitation'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+          </main>
+        </div>
       </div>
 
       {showOnboarding && (

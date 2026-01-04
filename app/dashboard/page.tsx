@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { requireAuth, getActiveMemberships, getCompany } from '@/lib/auth/server'
+import { requireAuth, getActiveMemberships, getCompany, getProfile } from '@/lib/auth/server'
 import DashboardClient from './client'
 
 export default async function DashboardPage({
@@ -8,6 +8,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ companyId?: string }>
 }) {
   const user = await requireAuth()
+  const profile = await getProfile(user.id)
   const memberships = await getActiveMemberships(user.id)
 
   // Case A: No memberships
@@ -44,6 +45,6 @@ export default async function DashboardPage({
     redirect('/access-denied?reason=company_suspended')
   }
 
-  return <DashboardClient company={company} userRole={membership.role} companyId={companyId!} />
+  return <DashboardClient company={company} userRole={membership.role} companyId={companyId!} userFullName={profile?.full_name || null} />
 }
 
