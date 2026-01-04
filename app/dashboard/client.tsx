@@ -152,10 +152,10 @@ export default function DashboardClient({ company, userRole, companyId, userFull
 
   return (
     <>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white flex flex-col">
         {/* Header - Full width, not affected by sidebar */}
-        <header style={{ backgroundColor: '#f9f9f9' }}>
-          <div className="px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
+        <header className="border-b border-gray-200" style={{ backgroundColor: '#f9f9f9' }}>
+          <div className="px-4 sm:px-6 lg:px-2 py-2 flex justify-between items-center">
             <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <button
@@ -192,10 +192,10 @@ export default function DashboardClient({ company, userRole, companyId, userFull
         </header>
 
         {/* Content area - Split between sidebar and main content */}
-        <div className="flex px-1 sm:px-2 lg:px-3 pb-1 sm:pb-2 lg:pb-3" style={{ backgroundColor: '#f9f9f9' }}>
-          <div className="flex w-full p-2 sm:p-2.5 lg:p-3 rounded-xl" style={{ backgroundColor: '#f9f9f9' }}>
+        <div className="flex flex-1" style={{ backgroundColor: '#f9f9f9' }}>
+          <div className="flex w-full rounded-xl" style={{ backgroundColor: '#f9f9f9' }}>
             {/* Sidebar wrapper */}
-            <div style={{ backgroundColor: '#f5f5f5' }}>
+            <div className={`lg:relative lg:flex-shrink-0 ${sidebarOpen ? 'lg:w-56' : 'lg:w-14'}`} style={{ backgroundColor: '#f5f5f5' }}>
               <Sidebar
                 companyId={companyId}
                 userRole={userRole}
@@ -205,7 +205,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
             </div>
 
             {/* Main Content wrapper */}
-            <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 rounded-xl border border-gray-200" style={{ backgroundColor: '#ffffff' }}>
+            <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 border-b border-l border-r border-gray-200" style={{ backgroundColor: '#ffffff' }}>
             <main>
           <div className="mb-8">
             <h2 className="text-lg font-medium text-black mb-2">
