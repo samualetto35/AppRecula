@@ -53,7 +53,7 @@ export default function PageSidebar({ items, basePath, companyId }: Props) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-48 flex-shrink-0 border-r border-gray-200 bg-[#f9f9f9]">
+      <aside className="hidden lg:block w-48 flex-shrink-0 border-r border-gray-200 bg-white">
         <nav className="p-2">
           <ul className="space-y-1">
             {items.map((item) => {

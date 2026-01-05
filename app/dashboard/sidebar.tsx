@@ -198,8 +198,8 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
 
           {/* Navigation */}
           <nav className={`flex-1 bg-white lg:bg-[#f9f9f9] ${!isOpen && !isHovered ? 'lg:p-2' : 'p-4 lg:p-2'}`}>
-            <ul className="space-y-2 lg:space-y-1">
-              {menuItems.map((item) => {
+            <ul className="space-y-3 lg:space-y-2">
+              {menuItems.map((item, index) => {
                 const itemPath = item.path.split('?')[0]
 
                 // Dashboard özel durumu: sadece tam /dashboard iken aktif olsun
@@ -210,8 +210,24 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
                     (currentPath === itemPath || currentPath.startsWith(`${itemPath}/`))) ||
                   (isDashboard && currentPath === itemPath)
 
+                // Check if separator needed before this item
+                const needsSeparatorBefore = 
+                  (item.label === 'Interviews') || // After Candidates
+                  (item.label === 'Team Management') // After Inbox
+                
+                // Check if spacing needed before this item (without line)
+                const needsSpacingBefore = item.label === 'Settings' // After Integrations
+
                 return (
                   <li key={item.path}>
+                    {needsSeparatorBefore && (
+                      <div className="my-4 lg:my-3">
+                        <div className="h-px bg-gray-200 mx-2 lg:mx-1"></div>
+                      </div>
+                    )}
+                    {needsSpacingBefore && (
+                      <div className="my-4 lg:my-3"></div>
+                    )}
                     <Link
                       href={item.path}
                       prefetch={true}
