@@ -1,41 +1,34 @@
 import { redirect } from 'next/navigation'
 import { requireAuth, getActiveMemberships, getCompany, getProfile } from '@/lib/auth/server'
-import DashboardContent from './dashboard-content'
+import DashboardLayoutClient from './layout-client'
 
-export default async function DashboardPage({
-  searchParams,
+export default async function DashboardLayout({
+  children,
 }: {
-  searchParams: Promise<{ companyId?: string }>
+  children: React.ReactNode
 }) {
   const user = await requireAuth()
   const profile = await getProfile(user.id)
   const memberships = await getActiveMemberships(user.id)
 
-  // Case A: No memberships
   if (memberships.length === 0) {
     redirect('/setup')
   }
 
-  const params = await searchParams
-  let companyId = params.companyId
+  // Use first membership as default (will be overridden by page-level companyId from URL)
+  let companyId = memberships[0].company_id
 
-  // Case B: Single membership - use it directly
-  if (!companyId) {
-    if (memberships.length === 1) {
-      companyId = memberships[0].company_id
-    } else {
-      // Case C: Multiple memberships - redirect to selection
-      redirect('/select-company')
-    }
+  if (memberships.length > 1) {
+    // For multiple memberships, we'll use the first one as default
+    // Pages will handle their own companyId from searchParams
+    companyId = memberships[0].company_id
   }
 
-  // Verify user has access to this company
   const membership = memberships.find((m) => m.company_id === companyId)
   if (!membership) {
     redirect('/select-company')
   }
 
-  // Check company status
   if (membership.company.status !== 'active') {
     redirect('/access-denied?reason=company_suspended')
   }
@@ -45,6 +38,15 @@ export default async function DashboardPage({
     redirect('/access-denied?reason=company_suspended')
   }
 
-  return <DashboardContent company={company} userRole={membership.role} companyId={companyId!} userFullName={profile?.full_name || null} />
+  return (
+    <DashboardLayoutClient
+      company={company}
+      userRole={membership.role}
+      companyId={companyId!}
+      userFullName={profile?.full_name || null}
+    >
+      {children}
+    </DashboardLayoutClient>
+  )
 }
 
