@@ -15,8 +15,12 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
+    // Get origin from request URL or headers
+    const requestUrl = new URL(request.url)
+    const origin = requestUrl.origin || request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    
     // Send magic link for login
-    const callbackUrl = new URL('/api/auth/callback', request.headers.get('origin') || 'http://localhost:3000')
+    const callbackUrl = new URL('/api/auth/callback', origin)
     callbackUrl.searchParams.set('type', 'login')
 
     const { error: authError } = await supabase.auth.signInWithOtp({

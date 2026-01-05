@@ -15,12 +15,14 @@ export default async function DashboardLayout({
     redirect('/setup')
   }
 
-  // Use first membership as default (will be overridden by page-level companyId from URL)
+  // Use first membership as default
+  // Layout-client will handle companyId from URL searchParams and update role accordingly
   let companyId = memberships[0].company_id
 
+  // If multiple memberships, redirect to select-company (unless URL has companyId)
   if (memberships.length > 1) {
-    // For multiple memberships, we'll use the first one as default
-    // Pages will handle their own companyId from searchParams
+    // Let client component handle URL-based companyId selection
+    // For now, use first one as fallback
     companyId = memberships[0].company_id
   }
 
@@ -38,12 +40,14 @@ export default async function DashboardLayout({
     redirect('/access-denied?reason=company_suspended')
   }
 
+  // Pass all memberships so client can select correct one based on URL
   return (
     <DashboardLayoutClient
       company={company}
       userRole={membership.role}
       companyId={companyId!}
       userFullName={profile?.full_name || null}
+      allMemberships={memberships}
     >
       {children}
     </DashboardLayoutClient>

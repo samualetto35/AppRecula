@@ -24,8 +24,9 @@ export async function POST(request: Request) {
     const supabase = await createClient()
     console.log('✅ Supabase client created')
 
-    // Send magic link for registration
-    const origin = request.headers.get('origin') || 'http://localhost:3000'
+    // Get origin from request URL or headers
+    const requestUrl = new URL(request.url)
+    const origin = requestUrl.origin || request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
     console.log('Origin:', origin)
     
     const callbackUrl = new URL('/api/auth/callback', origin)

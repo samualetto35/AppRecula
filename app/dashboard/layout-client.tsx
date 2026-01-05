@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import type { Company, MembershipRole } from '@/lib/types/database'
+import type { Company, MembershipRole, MembershipWithCompany } from '@/lib/types/database'
 import Sidebar from './sidebar'
 import OnboardingModal from './onboarding-modal'
 
@@ -11,14 +11,25 @@ interface Props {
   userRole: MembershipRole
   companyId: string
   userFullName: string | null
+  allMemberships?: MembershipWithCompany[]
   children: React.ReactNode
 }
 
-export default function DashboardLayoutClient({ company, userRole, companyId: defaultCompanyId, userFullName, children }: Props) {
+export default function DashboardLayoutClient({ company, userRole, companyId: defaultCompanyId, userFullName, allMemberships, children }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const companyId = useMemo(() => searchParams.get('companyId') || defaultCompanyId, [searchParams, defaultCompanyId])
+  
+  // Get correct role based on companyId from URL
+  const currentRole = useMemo(() => {
+    if (allMemberships && companyId) {
+      const membership = allMemberships.find((m) => m.company_id === companyId)
+      return membership?.role || userRole
+    }
+    return userRole
+  }, [allMemberships, companyId, userRole])
+  
   const [companyData, setCompanyData] = useState(company)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -120,7 +131,7 @@ export default function DashboardLayoutClient({ company, userRole, companyId: de
             <div className={`lg:relative lg:flex-shrink-0 ${sidebarOpen ? 'lg:w-56' : 'lg:w-14'}`} style={{ backgroundColor: '#f5f5f5' }}>
               <Sidebar
                 companyId={companyId}
-                userRole={userRole}
+                userRole={currentRole}
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
               />
