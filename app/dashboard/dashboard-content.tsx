@@ -49,10 +49,9 @@ export default function DashboardContent({ company, userRole, companyId, userFul
       }
     }
 
-    if (userRole === 'admin') {
-      fetchTeamMembers()
-    }
-  }, [companyId, userRole])
+    // Fetch team members for all roles (admin, recruiter, viewer)
+    fetchTeamMembers()
+  }, [companyId])
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,7 +59,7 @@ export default function DashboardContent({ company, userRole, companyId, userFul
     setInviteError('')
 
     try {
-      const response = await fetch('/api/team/invite', {
+      const response = await fetch('/api/memberships/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -73,10 +72,10 @@ export default function DashboardContent({ company, userRole, companyId, userFul
         setInviteForm({ email: '', fullName: '', role: 'recruiter' })
         setShowInviteModal(false)
         // Refresh team members
-        const membersResponse = await fetch(`/api/team?companyId=${companyId}`)
+        const membersResponse = await fetch(`/api/memberships/list?companyId=${companyId}`)
         if (membersResponse.ok) {
           const data = await membersResponse.json()
-          setTeamMembers(data.members || [])
+          setTeamMembers(data.memberships || [])
         }
       } else {
         const error = await response.json()
@@ -145,40 +144,43 @@ export default function DashboardContent({ company, userRole, companyId, userFul
             </dl>
           </div>
 
-          {userRole === 'admin' && (
-            <div className="mt-8 rounded">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-medium text-black">Team Members</h3>
+          <div className="mt-8 rounded">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-medium text-black">Team Members</h3>
+              {userRole === 'admin' && (
                 <button
                   onClick={() => setShowInviteModal(true)}
                   className="px-4 py-2 text-sm text-white bg-black rounded-md hover:bg-gray-800"
                 >
                   Invite Member
                 </button>
-              </div>
+              )}
+            </div>
 
-              {teamMembersLoading ? (
-                <p className="text-sm text-gray-600">Loading team members...</p>
-              ) : teamMembers.length === 0 ? (
-                <p className="text-sm text-gray-600">No team members yet.</p>
-              ) : (
-                <div className="border border-gray-200 rounded-md overflow-hidden">
-                  <table className="w-full">
+            {teamMembersLoading ? (
+              <p className="text-sm text-gray-600">Loading team members...</p>
+            ) : teamMembers.length === 0 ? (
+              <p className="text-sm text-gray-600">No team members yet.</p>
+            ) : (
+              <div className="border border-gray-200 rounded-md overflow-hidden">
+                {/* Mobile scrollable wrapper */}
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[600px]">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Name</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Email</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Role</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase whitespace-nowrap">Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase whitespace-nowrap">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase whitespace-nowrap">Role</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase whitespace-nowrap">Status</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {teamMembers.map((member) => (
                         <tr key={member.id}>
-                          <td className="px-4 py-3 text-sm text-black">{member.full_name || '-'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{member.email || '-'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600 capitalize">{member.role}</td>
-                          <td className="px-4 py-3 text-sm">
+                          <td className="px-4 py-3 text-sm text-black whitespace-nowrap">{member.full_name || '-'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{member.email || '-'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 capitalize whitespace-nowrap">{member.role}</td>
+                          <td className="px-4 py-3 text-sm whitespace-nowrap">
                             <span className={`px-2 py-1 text-xs rounded ${
                               member.status === 'active' 
                                 ? 'bg-green-100 text-green-800' 
@@ -194,9 +196,9 @@ export default function DashboardContent({ company, userRole, companyId, userFul
                     </tbody>
                   </table>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </main>
       </div>
 

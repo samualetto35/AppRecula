@@ -172,7 +172,7 @@ export default function DashboardClient({ company, userRole, companyId, userFull
     <>
       <div className="min-h-screen bg-white flex flex-col">
         {/* Header - Full width, not affected by sidebar */}
-        <header className="border-b border-gray-200" style={{ backgroundColor: '#f9f9f9' }}>
+        <header className="border-b border-gray-200" style={{ backgroundColor: '#f9fbfc' }}>
           <div className="px-4 sm:px-6 lg:px-2 py-2 flex justify-between items-center">
             <div className="flex items-center gap-3">
               {/* Mobile menu button */}
@@ -211,10 +211,10 @@ export default function DashboardClient({ company, userRole, companyId, userFull
         </header>
 
         {/* Content area - Split between sidebar and main content */}
-        <div className="flex flex-1" style={{ backgroundColor: '#f9f9f9' }}>
-          <div className="flex w-full rounded-xl" style={{ backgroundColor: '#f9f9f9' }}>
+        <div className="flex flex-1" style={{ backgroundColor: '#f9fbfc' }}>
+          <div className="flex w-full rounded-xl" style={{ backgroundColor: '#f9fbfc' }}>
             {/* Sidebar wrapper */}
-            <div className={`lg:relative lg:flex-shrink-0 ${sidebarOpen ? 'lg:w-56' : 'lg:w-14'}`} style={{ backgroundColor: '#f5f5f5' }}>
+            <div className={`lg:relative lg:flex-shrink-0 ${sidebarOpen ? 'lg:w-56' : 'lg:w-14'}`} style={{ backgroundColor: '#f9fbfc' }}>
               <Sidebar
                 companyId={companyId}
                 userRole={userRole}

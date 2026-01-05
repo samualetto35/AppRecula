@@ -198,7 +198,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
           </div>
 
           {/* Navigation */}
-          <nav className={`flex-1 bg-white lg:bg-[#f9f9f9] ${!isOpen && !isHovered ? 'lg:p-2' : 'p-4 lg:p-2'}`}>
+          <nav className={`flex-1 bg-white lg:bg-[#f9fbfc] ${!isOpen && !isHovered ? 'lg:p-2' : 'p-4 lg:p-2'}`}>
             <ul className="space-y-3 lg:space-y-2">
               {menuItems.map((item, index) => {
                 const itemPath = item.path.split('?')[0]
