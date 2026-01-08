@@ -19,9 +19,30 @@ export async function updateSession(request: NextRequest) {
           supabaseResponse = NextResponse.next({
             request,
           })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+          cookiesToSet.forEach(({ name, value, options }) => {
+            // Make auth cookies persistent (remember session even after browser closes)
+            // Supabase auth cookies typically start with 'sb-' or 'supabase.auth.token'
+            const isAuthCookie = name.startsWith('sb-') || name.includes('auth-token')
+            
+            if (isAuthCookie && value) {
+              // Set persistent cookie: 30 days expiration
+              // maxAge is in seconds: 30 days = 30 * 24 * 60 * 60 = 2,592,000 seconds
+              const maxAge = 30 * 24 * 60 * 60 // 30 days
+              
+              supabaseResponse.cookies.set(name, value, {
+                ...options,
+                maxAge,
+                // Ensure cookie persists across browser sessions
+                httpOnly: true,
+                sameSite: 'lax' as const,
+                secure: process.env.NODE_ENV === 'production',
+                path: '/',
+              })
+            } else {
+              // For other cookies, use default options
+              supabaseResponse.cookies.set(name, value, options)
+            }
+          })
         },
       },
     }

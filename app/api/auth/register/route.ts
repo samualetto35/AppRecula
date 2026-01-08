@@ -24,11 +24,43 @@ export async function POST(request: Request) {
     const supabase = await createClient()
     console.log('✅ Supabase client created')
 
-    // Get origin from request URL or headers
+    // Get origin from request URL or headers - ensure it's always a full URL with protocol
     const requestUrl = new URL(request.url)
-    const origin = requestUrl.origin || request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    let origin = requestUrl.origin
+    
+    // Fallback to headers or env var if origin is not available
+    if (!origin || origin === 'null') {
+      const headerOrigin = request.headers.get('origin')?.trim()
+      const headerHost = request.headers.get('host')?.trim()
+      const envUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+      
+      origin = headerOrigin || (headerHost ? `http://${headerHost}` : null) || envUrl || 'http://localhost:3000'
+    }
+    
+    // Clean and validate origin
+    origin = origin.trim()
+    
+    // Ensure protocol is present
+    if (origin && !origin.startsWith('http://') && !origin.startsWith('https://')) {
+      // If on production or has https in headers, use https, otherwise http
+      const isHttps = request.headers.get('x-forwarded-proto') === 'https' || 
+                      process.env.NODE_ENV === 'production' ||
+                      origin.includes('netlify.app') ||
+                      origin.includes('vercel.app')
+      origin = `${isHttps ? 'https' : 'http'}://${origin}`
+    }
+    
+    // Validate the URL is valid before using it
+    try {
+      new URL(origin)
+    } catch (e) {
+      console.error('❌ Invalid origin URL:', origin)
+      origin = 'http://localhost:3000' // Safe fallback
+    }
+    
     console.log('Origin:', origin)
     
+    // Use /api/auth/callback (not /auth/callback)
     const callbackUrl = new URL('/api/auth/callback', origin)
     callbackUrl.searchParams.set('type', 'register')
     callbackUrl.searchParams.set('email', email)
@@ -38,13 +70,24 @@ export async function POST(request: Request) {
     if (companyWebsite) callbackUrl.searchParams.set('companyWebsite', companyWebsite)
     if (phone) callbackUrl.searchParams.set('phone', phone)
 
-    console.log('📧 Callback URL:', callbackUrl.toString())
+    const callbackUrlString = callbackUrl.toString()
+    console.log('📧 Registration callback URL:', callbackUrlString)
+    
+    // Final validation - ensure no whitespace issues
+    if (callbackUrlString.includes(' ') || callbackUrlString.trim() !== callbackUrlString) {
+      console.error('❌ Callback URL contains whitespace! Fixing...')
+      const fixedUrl = callbackUrlString.trim()
+      console.log('✅ Fixed callback URL:', fixedUrl)
+    }
     console.log('Sending magic link to:', email)
+
+    // Ensure callback URL is clean before sending to Supabase
+    const cleanCallbackUrl = callbackUrl.toString().trim()
 
     const { data: authData, error: authError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: callbackUrl.toString(),
+        emailRedirectTo: cleanCallbackUrl,
       },
     })
 

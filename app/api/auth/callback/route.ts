@@ -6,35 +6,57 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const type = requestUrl.searchParams.get('type')
+  const error = requestUrl.searchParams.get('error')
+  const errorDescription = requestUrl.searchParams.get('error_description')
 
   console.log('📋 Query params:', {
     code: !!code,
     type,
+    error,
+    errorDescription,
     email: requestUrl.searchParams.get('email'),
     fullName: requestUrl.searchParams.get('fullName'),
     jobTitle: requestUrl.searchParams.get('jobTitle'),
     companyName: requestUrl.searchParams.get('companyName'),
+    allParams: Object.fromEntries(requestUrl.searchParams.entries()),
   })
-
-  if (!code) {
-    console.log('⚠️  No code in URL, redirecting to login')
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
 
   const supabase = await createClient()
 
-  console.log('🔄 Exchanging code for session...')
-  const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-
-  if (exchangeError) {
-    console.error('❌ Session exchange error:', exchangeError)
-    return NextResponse.redirect(new URL('/login?error=session_exchange_failed', request.url))
+  // Check for error from Supabase
+  if (error) {
+    console.error('❌ Error from Supabase auth:', error, errorDescription)
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || '')}`, request.url))
   }
 
-  console.log('✅ Code exchanged for session successfully')
-  console.log('Session user ID:', exchangeData.session?.user?.id)
+  // If no code, check if user already has a session (magic link might have already verified)
+  if (!code) {
+    console.log('⚠️  No code in URL, checking for existing session...')
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (user && !userError) {
+      console.log('✅ Found existing session for user:', user.id, user.email)
+      // User is already authenticated, proceed with the flow
+    } else {
+      console.log('❌ No code and no valid session, redirecting to login')
+      return NextResponse.redirect(new URL('/login?error=no_code_no_session', request.url))
+    }
+  } else {
+    // Exchange code for session
+    console.log('🔄 Exchanging code for session...')
+    const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-  // Get the authenticated user
+    if (exchangeError) {
+      console.error('❌ Session exchange error:', exchangeError)
+      console.error('Error details:', JSON.stringify(exchangeError, null, 2))
+      return NextResponse.redirect(new URL(`/login?error=session_exchange_failed&details=${encodeURIComponent(exchangeError.message)}`, request.url))
+    }
+
+    console.log('✅ Code exchanged for session successfully')
+    console.log('Session user ID:', exchangeData.session?.user?.id)
+  }
+
+  // Get the authenticated user (whether from code exchange or existing session)
   const {
     data: { user },
     error: userError,

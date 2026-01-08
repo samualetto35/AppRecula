@@ -25,7 +25,7 @@ export default function Sidebar({ companyId, userRole, isOpen, onClose }: Props)
     setClickedPath(null) // Clear clicked path when navigation completes
   }, [pathname])
 
-  // Close sidebar on mobile after navigation
+    // Close sidebar on mobile after navigation
   const handleLinkClick = (itemPath: string) => {
     // Optimistic update - immediately set as active
     const cleanPath = itemPath.split('?')[0]
